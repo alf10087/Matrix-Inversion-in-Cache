@@ -1,15 +1,43 @@
-## Put comments here that give an overall description of what your
-## functions do
+# This script uses the lexical scoping rules of R to cache a potentially time-consuming computation: matrix inversion.
 
-## Write a short comment describing this function
+rm(list=ls())
+
+## The first function makes the list of functions.
 
 makeCacheMatrix <- function(x = matrix()) {
-
+  m <- NULL
+  get <- function() x
+  setinverse <- function() m <<- solve(x)
+  getinverse <- function() m
+  list(get = get,
+       setinverse = setinverse,
+       getinverse = getinverse)
 }
 
 
-## Write a short comment describing this function
+## This is the function that checks the cache and finds it if it is stored.
 
 cacheSolve <- function(x, ...) {
-        ## Return a matrix that is the inverse of 'x'
+  m <- x$getinverse()
+  if(!is.null(m)) {
+    message("getting cached data")
+    return(m)
+  }
+  data <- x$get()
+  m <- solve(data, ...)
+  x$setinverse(m)
+  m
 }
+
+#### Run an example to see if it has worked, I use a 2x2 random normal matrix.
+
+n <- matrix(rnorm(4), 2, 2)
+a <- makeCacheMatrix(n)
+n_inv <- solve(n)
+a$setinverse()
+a$getinverse()
+cacheSolve(a)
+
+#### Test to see if everything is fine. If this is true, it has worked alright.
+
+n_inv == cacheSolve(a)
